@@ -1,0 +1,29 @@
+# Maintainer: Kiri <kiri@vern.cc>
+
+pkgname='python-orange3-bioinformatics'
+_module=Orange3-Bioinformatics
+pkgver=4.7.1
+pkgrel=1
+pkgdesc="Orange Bioinformatics add-on for Orange data mining software package."
+arch=('x86_64')
+url="https://github.com/biolab/orange3-bioinformatics"
+license=('GPL')
+depends=(python)
+makedepends=(python-build
+             python-installer
+             python-setuptools
+             python-setuptools-scm
+             python-wheel)
+source=("${pkgname}-${pkgver}.tar.gz::https://files.pythonhosted.org/packages/source/${_module::1}/$_module/${_module}-${pkgver}.tar.gz")
+sha256sums=('e8d1821fa7765a6032efd2b4ca2f6f816783575ab8b0ff3adbece62ac1aa65fb')
+
+build() {
+    cd "${srcdir}/${_module}-${pkgver}"
+    python -m build --wheel --no-isolation
+}
+
+package() {
+    cd "${srcdir}/${_module}-${pkgver}"
+    install -D -m644 LICENSE "${pkgdir}/usr/share/licenses/python-orange3-bioinformatics/LICENSE"
+    python -m installer --destdir="${pkgdir}" dist/*.whl
+}
