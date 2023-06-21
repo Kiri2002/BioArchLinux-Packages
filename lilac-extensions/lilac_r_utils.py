@@ -183,6 +183,7 @@ class Pkgbuild:
 
 # maps the license field in the DESCRIPTION file to a PKGBUILD license value
 license_map = {
+    "Apache License (== 2.0)": "Apache",
     "Apache License 2.0": "Apache",
     "BSD_2_clause + file LICENSE": "BSD",
     "BSD_3_clause + file LICENSE": "BSD",
@@ -211,9 +212,14 @@ class CheckFailed(Exception):
         self.msg = msg
 
 class CheckConfig:
-    def __init__(self, expect_license: str = None, expect_systemrequirements: str = None):
+    def __init__(self,
+        expect_license: str = None,
+        expect_systemrequirements: str = None,
+        ignore_fortran_files: bool = False,
+    ):
         self.expect_license = expect_license
         self.expect_systemrequirements = expect_systemrequirements
+        self.ignore_fortran_files = ignore_fortran_files
 
 def check_default_pkgs(pkg: Pkgbuild, desc: Description, cfg: CheckConfig):
     errors = set()
@@ -285,9 +291,12 @@ def check_fortran(pkg: Pkgbuild, desc: Description, cfg: CheckConfig):
     fortran_dep = "gcc-fortran" in pkg.makedepends
 
     if fortran_files and not fortran_dep:
-        raise CheckFailed("Missing make dependency: gcc-fortran")
+        if not cfg.ignore_fortran_files:
+            raise CheckFailed("Missing make dependency: gcc-fortran")
     elif not fortran_files and fortran_dep:
         raise CheckFailed("Unnecessary make dependency: gcc-fortran")
+    elif cfg.ignore_fortran_files and not fortran_files:
+        raise CheckFailed("Unnecessary config 'ignore_fortran_files'")
 
 def check_systemrequirements(pkg: Pkgbuild, desc: Description, cfg: CheckConfig):
     if cfg.expect_systemrequirements != desc.systemrequirements:
